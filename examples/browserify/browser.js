@@ -1,4 +1,4 @@
-var PDFDocument = require('../');
+var PDFDocument = require('../..');
 var blobStream = require('blob-stream');
 var ace = require('brace');
 require('brace/mode/javascript');
@@ -73,8 +73,13 @@ editor
 var iframe = document.querySelector('iframe');
 makePDF(PDFDocument, blobStream, lorem, iframe);
 
+let debounceTimeout;
+
 editor.getSession().on('change', function() {
   try {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
     var fn = new Function(
       'PDFDocument',
       'blobStream',
@@ -82,7 +87,10 @@ editor.getSession().on('change', function() {
       'iframe',
       editor.getValue()
     );
-    fn(PDFDocument, blobStream, lorem, iframe);
+    debounceTimeout = setTimeout(() => {
+      fn(PDFDocument, blobStream, lorem, iframe);
+      debounceTimeout = undefined;
+    }, 100);
   } catch (e) {
     console.log(e);
   }
